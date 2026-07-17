@@ -252,6 +252,7 @@ function renderSyncSection(tab: GeodeSettingTab, containerEl: HTMLElement): void
     .setDesc(
       "Glob patterns for files and folders to exclude from sync, one per line. " +
         "The local_ prefix is always excluded regardless of these patterns.",
+      +"for example: use private/** to exclude a folder and its contents",
     )
     .addTextArea((text) => {
       text

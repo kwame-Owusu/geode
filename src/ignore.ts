@@ -39,17 +39,32 @@ export function matchesGlob(path: string, pattern: string): boolean {
   return globToRegex(pattern).test(path);
 }
 
-// shouldIgnore reports whether path should be excluded from sync, checking the built-in local_
-// prefix convention first, then any user-configured glob patterns.
-export function shouldIgnore(path: string, patterns: string[]): boolean {
+// compilePatterns converts a list of glob patterns to regular expressions once
+// so the compiled forms can be reused across many shouldIgnoreCompiled calls.
+export function compilePatterns(patterns: string[]): RegExp[] {
+  const compiled: RegExp[] = [];
+  for (const pattern of patterns) {
+    compiled.push(globToRegex(pattern));
+  }
+  return compiled;
+}
+
+// shouldIgnoreCompiled is like shouldIgnore but accepts pre-compiled patterns
+// for callers that filter many paths against a fixed pattern set.
+export function shouldIgnoreCompiled(path: string, compiled: RegExp[]): boolean {
   if (hasLocalPrefix(path)) {
     return true;
   }
-  for (const pattern of patterns) {
-    if (matchesGlob(path, pattern)) {
+  for (const re of compiled) {
+    if (re.test(path)) {
       return true;
     }
   }
-
   return false;
+}
+
+// shouldIgnore reports whether path should be excluded from sync, checking the built-in local_
+// prefix convention first, then any user-configured glob patterns.
+export function shouldIgnore(path: string, patterns: string[]): boolean {
+  return shouldIgnoreCompiled(path, compilePatterns(patterns));
 }
