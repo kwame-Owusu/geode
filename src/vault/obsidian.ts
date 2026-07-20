@@ -1,7 +1,7 @@
 import type { DataAdapter, Vault } from "obsidian";
+import { shouldIgnore } from "../ignore.ts";
 import type { LocalWriter } from "../sync/execute.ts";
 import { type FileInfo, isSnapshot, type Reader, type Snapshot, type Store } from "./vault.ts";
-import { shouldIgnore } from "../ignore.ts";
 
 // ensureParentDir creates path's parent folder, and any folders above it, before a write that
 // might land somewhere the vault has never had a file before. mkdir is assumed to create
