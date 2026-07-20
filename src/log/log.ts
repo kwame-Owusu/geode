@@ -9,7 +9,7 @@ export type LogEntry = {
 };
 
 // LogSink persists log entries and reads them back. The real implementation writes to a capped
-// file inside the plugin's own data directory (see log-adapter.ts); tests, and the fallback used
+// file inside the plugin's own data directory (see adapter.ts); tests, and the fallback used
 // when there's nowhere to persist to, use an in-memory sink (see createMemorySink below).
 export type LogSink = {
   append: (entry: LogEntry) => Promise<void>;
@@ -125,7 +125,12 @@ export function createLogger(sink: LogSink, minLevel: LogLevel): Logger {
       return;
     }
     consoleFor(level)(`geode: ${message}`);
-    void sink.append({ time: Date.now(), level, message });
+    // Fire and forget: the Logger API is synchronous, so append can't be awaited. Report a
+    // failed persist to the console rather than leaving it as an unhandled rejection, and never
+    // back into sink, which would recurse if the sink itself is what's failing.
+    sink.append({ time: Date.now(), level, message }).catch((err) => {
+      console.error(`geode: log sink append failed: ${err}`);
+    });
   };
 
   return {

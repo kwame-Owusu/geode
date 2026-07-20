@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "typescript-as-go": {
+      "source": "revett/typescript-as-go",
+      "sourceType": "github",
+      "skillPath": "skills/typescript-as-go/SKILL.md",
+      "computedHash": "4b0f12431264d1d9662cfd3a4400f33bda79e818bbaa03dfdf6066dab231a4cb"
+    }
+  }
+}
