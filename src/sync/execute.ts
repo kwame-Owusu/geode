@@ -7,7 +7,8 @@ import { conflictCopyPath, type SyncAction } from "./plan.ts";
 const DRIFT_MESSAGE = "changed locally mid sync; sync again to reconcile";
 
 const REMOTE_DRIFT_MESSAGE = "changed remotely mid sync; sync again to reconcile";
-const HASH_MISMATCH_MESSAGE = "fetched bytes do not match manifest hash; data may be corrupt";
+const HASH_MISMATCH_MESSAGE = "fetched bytes do not match manifest hash; sync again to reconcile";
+const MANIFEST_MISSING_HASH_MESSAGE = "manifest missing expected hash for this path";
 const REMOTE_ETAG_MESSAGE = "remote object has no etag";
 
 // ExecuteResult reports what executeSyncPlan carried out: completed holds every action fully
@@ -402,14 +403,16 @@ function localFailureMessage(err: unknown): string {
 
 // verifyFetch hashes fetched bytes and compares against the expected hash from the remote
 // snapshot. A mismatch means the storage response was truncated, corrupted, or tampered with;
-// writing it to disk would silently propagate damage to every other device on the next sync.
+// writing it to disk would silently propagate damage to every other device on the next sync. A
+// missing expected hash is a programming error — the manifest should always carry an entry for a
+// path the plan decided to pull — surfaced rather than silently bypassed.
 async function verifyFetch(
   path: string,
   body: Uint8Array,
   expected: FileState | undefined,
 ): Promise<SyncFailure | null> {
   if (expected === undefined) {
-    return null;
+    return { path, message: MANIFEST_MISSING_HASH_MESSAGE };
   }
   if ((await hashBytes(body)) === expected.hash) {
     return null;
